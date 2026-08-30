@@ -1,0 +1,813 @@
+openapi: 3.0.3
+info:
+  title: Flowery App - Order Tracking, Driver Fulfillment & Notifications API
+  description: |
+    Covers SCRUM-40 (Real-Time Order Tracking), SCRUM-41 (Driver App Fulfillment Flow), and
+    SCRUM-42 (Real-Time Order Status Sync via FCM). See the companion discussion document for the
+    flow diagrams, DB design, and the CQRS/Orchestrator breakdown.
+
+    ### Primary endpoints
+    1. `GET   /drivers/available-orders`                — Pool of unassigned orders a driver can claim
+    2. `POST  /drivers/me/orders/{orderId}/accept`       — Driver self-assigns (claims) an order
+    3. `GET   /drivers/me/active-order`                   — "Do I have a delivery in progress right now?"
+    4. `GET   /drivers/me/orders`                          — Driver's order history (paged)
+    5. `GET   /drivers/me/orders/{orderId}`               — Driver's single-order detail view
+    6. `PATCH /orders/{orderId}/status`                    — Driver advances an order through PickedUp -> OutForDelivery -> AwaitingDeliveryConfirmation
+    7. `GET   /orders/{orderId}/tracking`                  — Customer-facing live tracking screen
+    8. `POST  /drivers/me/location`                        — Driver's periodic location ping
+    9. `POST  /devices/register`                           — Register/refresh an FCM device token
+
+    All owned by Cart & Order Service except #9 (Notification Service).
+
+    ### Driver self-assignment (replaces admin assignment)
+    There is no admin assignment endpoint. A driver browses `GET /drivers/available-orders` and
+    claims one via `POST /drivers/me/orders/{orderId}/accept`. This directly resolves SCRUM-154's
+    open question in favor of "driver accepts," not "admin/system assigns."
+
+    ### One active delivery per driver
+    A driver may have **at most one** order in `PickedUp` / `OutForDelivery` /
+    `AwaitingDeliveryConfirmation` at a time. `POST /drivers/me/orders/{orderId}/accept` enforces
+    this with `409` if the driver already has one in progress. A driver becomes free to accept a
+    new order again only once their current one reaches a terminal state — `Delivered` (via
+    customer confirmation, see below) or `Cancelled` (cancellation itself is a separate, not-yet-
+    specified story, but whatever sets `Cancelled` automatically frees the driver too, since
+    availability is *computed* from `Order.Status`/`AssignedDriverId`, never stored as a separate
+    flag).
+
+    ### Status update request is a restricted enum, not a free string
+    `PATCH /orders/{orderId}/status` accepts a `DriverStatusUpdate` enum — **not** the full
+    `OrderStatus` enum. It only contains the three values a driver is ever allowed to set
+    (`PickedUp`, `OutForDelivery`, `AwaitingDeliveryConfirmation`). A driver POSTing something like
+    `Delivered` or `PaymentFailed` is structurally impossible — rejected by model binding before
+    any handler code runs, rather than relying solely on the transition-validator's business logic.
+    Server-side this must bind to the actual C# enum type (`DriverStatusUpdate`), not `string`, so
+    ASP.NET Core's model binder auto-rejects unrecognized values as `400` for free.
+
+    ### Status model — extends the shared OrderStatus enum
+    Adds `PickedUp` (previous revision) and now also **`AwaitingDeliveryConfirmation`** between
+    `OutForDelivery` and `Delivered`. Both are shared with the Checkout/Order API's `OrderStatus`
+    column — ship together.
+
+    ### FCM push is not a client-callable endpoint
+    Unchanged from the previous revision — see Notification Service section below.
+
+    ### Envelope
+    ```json
+    { "data": { ... }, "isSuccess": true, "message": "Success", "messageLocalized": "Success", "statusCode": "Success" }
+    ```
+  version: "2.0.0"
+  contact:
+    name: Elevate Flower E-Commerce Team
+
+servers:
+  - url: https://api.flowery-app.com/v1
+    description: Production Gateway
+  - url: https://staging-api.flowery-app.com/v1
+    description: Staging Gateway
+  - url: https://localhost:7169
+    description: Local Direct HTTPS Server (Order.Api — Cart & Order Service)
+  - url: https://localhost:7171
+    description: Local Direct HTTPS Server (Notification.Api)
+
+tags:
+  - name: Tracking
+    description: Customer-facing live order tracking — owned by Cart & Order Service.
+  - name: Driver Fulfillment
+    description: Driver-side available-orders pool, self-accept, order detail, status transitions, location pings — owned by Cart & Order Service.
+  - name: Notifications
+    description: Device token registration for FCM — owned by Notification Service.
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ==========================================
+  # 1. DRIVER — AVAILABLE ORDERS POOL
+  # ==========================================
+  /drivers/available-orders:
+    get:
+      tags: [Driver Fulfillment]
+      summary: List orders available for a driver to claim
+      description: |
+        Orders currently `Preparing` with no driver assigned yet, oldest-first (FIFO — first driver
+        to accept gets it; no cherry-picking by area/distance in this revision, noted as a possible
+        future enhancement in the discussion doc). Returned regardless of whether the calling
+        driver already has an active delivery — the accept action (below) is what enforces the
+        one-active-order rule, not this listing, so the client can freely show "what's coming up"
+        even mid-delivery if desired. The recommended client flow is to call
+        `GET /drivers/me/active-order` first and only show this pool screen if that returns `null`.
+      operationId: getAvailableOrdersForDriver
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageHeader'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverOrderListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Caller is not an Approved driver.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ==========================================
+  # 2. DRIVER — SELF-ACCEPT
+  # ==========================================
+  /drivers/me/orders/{orderId}/accept:
+    post:
+      tags: [Driver Fulfillment]
+      summary: Claim an available order
+      description: |
+        The driver's own self-assignment action — there is no admin equivalent. Two things must
+        both be true or this fails:
+        1. The calling driver has no other order currently `PickedUp`/`OutForDelivery`/
+           `AwaitingDeliveryConfirmation` (`409` otherwise: "you already have an active delivery").
+        2. `orderId` is still `Preparing` and unassigned at the moment of the call — claimed
+           atomically (a conditional update, not a check-then-write), so two drivers racing to
+           accept the same order can never both succeed (`409` for whichever loses the race,
+           distinct message: "already accepted by another driver").
+
+        On success, `Order.AssignedDriverId` is set but `Status` stays `Preparing` — accepting is
+        "this is mine," not "I've picked it up." The driver still calls
+        `PATCH /orders/{orderId}/status` with `PickedUp` once they've actually collected it from
+        the store.
+      operationId: acceptOrder
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageHeader'
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order claimed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Caller is not an Approved driver.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Either the driver already has an active delivery, or this order was just claimed by another driver.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ==========================================
+  # 3. DRIVER — ACTIVE ORDER CHECK
+  # ==========================================
+  /drivers/me/active-order:
+    get:
+      tags: [Driver Fulfillment]
+      summary: Get the driver's current in-progress order, if any
+      description: >
+        Fast single lookup for app startup / after backgrounding — decides whether the driver app
+        shows "your current delivery" or the available-orders pool. `data` is `null` if the driver
+        has nothing in `PickedUp`/`OutForDelivery`/`AwaitingDeliveryConfirmation` right now.
+      operationId: getMyActiveOrder
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageHeader'
+      responses:
+        '200':
+          description: OK — data is null if no active order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverOrderDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Caller is not an Approved driver.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ==========================================
+  # 4. DRIVER — ORDER HISTORY LIST
+  # ==========================================
+  /drivers/me/orders:
+    get:
+      tags: [Driver Fulfillment]
+      summary: List this driver's order history
+      description: >
+        Paged, newest-first. With the one-active-order rule, at most one item in this list will
+        ever be in a non-terminal status at a time — this endpoint is mainly for history
+        (`Delivered`/`Cancelled`) rather than an operational dashboard; use
+        `GET /drivers/me/active-order` for "what am I doing right now."
+      operationId: getMyDriverOrders
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageHeader'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverOrderListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Caller is not an Approved driver.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ==========================================
+  # 5. DRIVER — ORDER DETAIL
+  # ==========================================
+  /drivers/me/orders/{orderId}:
+    get:
+      tags: [Driver Fulfillment]
+      summary: Get full detail of one assigned order (driver view)
+      description: |
+        Items, customer contact info, pickup location (store), and the user's delivery address.
+        Same gift-recipient handling as before: `userAddress.recipientName`/`recipientPhone`
+        reflect the gift recipient when `isGift = true`.
+
+        `404` (not `403`) if `orderId` exists but isn't assigned to the calling driver.
+      operationId: getMyDriverOrderDetail
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageHeader'
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverOrderDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ==========================================
+  # 6. DRIVER — ADVANCE STATUS (restricted enum)
+  # ==========================================
+  /orders/{orderId}/status:
+    patch:
+      tags: [Driver Fulfillment]
+      summary: Advance an order's delivery status
+      description: |
+        Valid sequence from the driver's side: `PickedUp -> OutForDelivery ->
+        AwaitingDeliveryConfirmation`. The request body's `newStatus` is the **`DriverStatusUpdate`**
+        enum — a restricted three-value type, not the full `OrderStatus` enum and not a free
+        string. `Delivered` is never reachable through this endpoint at all.
+
+        Any other transition (skipping a step, moving backward, acting after
+        `AwaitingDeliveryConfirmation`) is rejected with `409`. Ownership enforced: `403` if this
+        order isn't assigned to the calling driver. Every successful transition fires a silent FCM
+        push to the customer and is reflected immediately in `GET /orders/{orderId}/tracking`.
+      operationId: updateOrderStatus
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageHeader'
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderStatusRequestDto'
+      responses:
+        '200':
+          description: Status updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: This order is not assigned to the calling driver.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Requested status is not a valid next step from the order's current status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ==========================================
+  # 7. CUSTOMER — LIVE TRACKING
+  # ==========================================
+  /orders/{orderId}/tracking:
+    get:
+      tags: [Tracking]
+      summary: Get live tracking info for an order
+      description: |
+        One endpoint serves every stage:
+        - `Preparing`, no `AssignedDriverId` yet: `driver`/`currentLocation` both `null` — "waiting
+          for a driver" (now genuinely means "no driver has claimed this yet," since there's no
+          admin-assignment delay to account for).
+        - `PickedUp`/`OutForDelivery`: `driver`/`currentLocation` populated, `isLive = true`.
+        - `AwaitingDeliveryConfirmation`: still `isLive = true`, location still shown (driver may
+          still be at the door).
+        - `Delivered`/`Cancelled`: `isLive = false`, `currentLocation` null — static summary.
+
+        `currentLocation.isStale` unchanged from the previous revision.
+      operationId: getOrderTracking
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageHeader'
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderTrackingResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ==========================================
+  # 8. DRIVER — LOCATION PING
+  # ==========================================
+  /drivers/me/location:
+    post:
+      tags: [Driver Fulfillment]
+      summary: Report the driver's current device location
+      description: |
+        Unchanged from the previous revision: periodic ping (10–15s) while the driver's one active
+        order is `PickedUp`/`OutForDelivery`/`AwaitingDeliveryConfirmation`; silently no-ops if
+        there's no active order; only "meaningful" updates trigger a push.
+      operationId: reportDriverLocation
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordDriverLocationRequestDto'
+      responses:
+        '200':
+          description: Location recorded (or silently no-op if no active order).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Caller is not an Approved driver.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ==========================================
+  # 9. DEVICE TOKEN REGISTRATION — NOTIFICATION SERVICE
+  # ==========================================
+  /devices/register:
+    post:
+      tags: [Notifications]
+      summary: Register or refresh an FCM device token
+      description: >
+        Unchanged from the previous revision — upserted by token, safe to call again as a refresh.
+      operationId: registerDeviceToken
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguageHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDeviceTokenRequestDto'
+      responses:
+        '200':
+          description: Registered/refreshed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '400':
+          description: Invalid token/platform.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    AcceptLanguageHeader:
+      name: Accept-Language
+      in: header
+      required: true
+      schema:
+        type: string
+        enum: [ar, en]
+        default: en
+    PageParam:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSizeParam:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 10
+
+  responses:
+    Unauthorized:
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BaseResponse'
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BaseResponse'
+    ServerError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BaseResponse'
+
+  schemas:
+    StatusCode:
+      type: string
+      enum: [Success, Created, NoContent, BadRequest, ValidationError, NotFound, Unauthorized, InternalServerError]
+
+    BaseResponse:
+      type: object
+      properties:
+        data:
+          nullable: true
+        isSuccess:
+          type: boolean
+        message:
+          type: string
+        messageLocalized:
+          type: string
+        statusCode:
+          $ref: '#/components/schemas/StatusCode'
+      required: [data, isSuccess, message, messageLocalized, statusCode]
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPreviousPage:
+          type: boolean
+      required: [page, pageSize, totalCount, totalPages, hasNextPage, hasPreviousPage]
+
+    # ---- Status model ----
+
+    OrderStatus:
+      type: string
+      description: >
+        Full domain status set, used for reads (tracking, order detail, history filters). Adds
+        AwaitingDeliveryConfirmation (new in this revision) between OutForDelivery and Delivered.
+      enum: [Placed, PendingPayment, PaymentFailed, Preparing, PickedUp, OutForDelivery, AwaitingDeliveryConfirmation, Delivered, Cancelled]
+
+    DriverStatusUpdate:
+      type: string
+      description: >
+        Restricted enum for PATCH /orders/{orderId}/status — the only three values a driver may
+        ever submit. Deliberately NOT the full OrderStatus enum: Delivered, Cancelled,
+        PaymentFailed, etc. are structurally unreachable from this endpoint. Must bind to a real
+        C# enum server-side (DriverStatusUpdate), not string — unrecognized values are rejected by
+        model binding as 400 before any handler runs.
+      enum: [PickedUp, OutForDelivery, AwaitingDeliveryConfirmation]
+
+    # ---- Tracking ----
+
+    DriverSummary:
+      type: object
+      properties:
+        driverId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        photoUrl:
+          type: string
+          format: uri
+          nullable: true
+        phone:
+          type: string
+      required: [driverId, name, phone]
+
+    LocationPoint:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        recordedAt:
+          type: string
+          format: date-time
+        isStale:
+          type: boolean
+      required: [lat, lng, recordedAt, isStale]
+
+    DestinationPoint:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        addressLine:
+          type: string
+      required: [lat, lng, addressLine]
+
+    OrderTrackingData:
+      type: object
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        isLive:
+          type: boolean
+        driver:
+          $ref: '#/components/schemas/DriverSummary'
+          nullable: true
+        currentLocation:
+          $ref: '#/components/schemas/LocationPoint'
+          nullable: true
+        userAddress:
+          $ref: '#/components/schemas/DestinationPoint'
+        estimatedDeliveryAt:
+          type: string
+          format: date-time
+          nullable: true
+        awaitingCustomerConfirmation:
+          type: boolean
+          description: true when status = AwaitingDeliveryConfirmation — client shows the "Confirm delivery" action.
+      required: [orderId, status, isLive, userAddress, awaitingCustomerConfirmation]
+
+    OrderTrackingResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/OrderTrackingData'
+
+    # ---- Driver views ----
+
+    DriverOrderSummary:
+      type: object
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        customerName:
+          type: string
+        customerAddress:
+          type: string
+        storeName:
+          type: string
+        storeAddress:
+          type: string
+        totalAmount:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        createdAt:
+          type: string
+          format: date-time
+        assignedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: null on the available-orders pool (unassigned); set once accepted.
+      required: [orderId, customerName, customerAddress, storeName, storeAddress, totalAmount, status, createdAt]
+
+    DriverOrderListData:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DriverOrderSummary'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [items, pagination]
+
+    DriverOrderListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/DriverOrderListData'
+
+    DriverOrderItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+      required: [productId, productName, quantity]
+
+    DriverPickupPoint:
+      type: object
+      properties:
+        storeName:
+          type: string
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        addressLine:
+          type: string
+      required: [storeName, lat, lng, addressLine]
+
+    DriverDropoffPoint:
+      type: object
+      properties:
+        recipientName:
+          type: string
+        recipientPhone:
+          type: string
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        addressLine:
+          type: string
+      required: [recipientName, recipientPhone, lat, lng, addressLine]
+
+    DriverOrderDetail:
+      type: object
+      nullable: true
+      description: nullable — used as-is by GET /drivers/me/active-order, where null means no active order.
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        isGift:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DriverOrderItem'
+        pickup:
+          $ref: '#/components/schemas/DriverPickupPoint'
+        userAddress:
+          $ref: '#/components/schemas/DriverDropoffPoint'
+      required: [orderId, status, isGift, items, pickup, userAddress]
+
+    DriverOrderDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/DriverOrderDetail'
+              nullable: true
+
+    # ---- Status update ----
+
+    UpdateOrderStatusRequestDto:
+      type: object
+      required: [newStatus]
+      properties:
+        newStatus:
+          $ref: '#/components/schemas/DriverStatusUpdate'
+
+    # ---- Location ping ----
+
+    RecordDriverLocationRequestDto:
+      type: object
+      required: [lat, lng, recordedAt]
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        recordedAt:
+          type: string
+          format: date-time
+
+    # ---- Device registration ----
+
+    DevicePlatform:
+      type: string
+      enum: [iOS, Android]
+
+    RegisterDeviceTokenRequestDto:
+      type: object
+      required: [token, platform]
+      properties:
+        token:
+          type: string
+        platform:
+          $ref: '#/components/schemas/DevicePlatform'
