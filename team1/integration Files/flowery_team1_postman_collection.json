@@ -1,4 +1,4 @@
-{
+﻿{
     "info":  {
                  "_postman_id":  "flowery-team1-api-gateway-collection",
                  "name":  "Flowery E-Commerce API Gateway (Team 1)",
@@ -59,6 +59,30 @@
                          "type":  "string",
                          "description":  "Occasion ID",
                          "value":  "20000000-0000-0000-0000-000000000001"
+                     },
+                     {
+                         "key":  "orderId",
+                         "type":  "string",
+                         "description":  "Order ID",
+                         "value":  "91000000-0000-0000-0000-000000000001"
+                     },
+                     {
+                         "key":  "refreshToken",
+                         "type":  "string",
+                         "description":  "Refresh token returned by login requests",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "driverApplicationId",
+                         "type":  "string",
+                         "description":  "Driver application ID",
+                         "value":  "00000000-0000-0000-0000-000000000000"
+                     },
+                     {
+                         "key":  "driverDocumentId",
+                         "type":  "string",
+                         "description":  "Driver application document ID",
+                         "value":  "00000000-0000-0000-0000-000000000000"
                      }
                  ],
     "item":  [
@@ -84,44 +108,6 @@
                                                   }
                                   },
                                   {
-                                      "name":  "Identity Service Health",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{baseUrl}}/identity/health",
-                                                                  "host":  [
-                                                                               "{{baseUrl}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "identity",
-                                                                               "health"
-                                                                           ]
-                                                              }
-                                                  }
-                                  },
-                                  {
-                                      "name":  "Catalog Service Health",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{baseUrl}}/catalog/health",
-                                                                  "host":  [
-                                                                               "{{baseUrl}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "catalog",
-                                                                               "health"
-                                                                           ]
-                                                              }
-                                                  }
-                                  },
-                                  {
                                       "name":  "Cart Service Health",
                                       "request":  {
                                                       "method":  "GET",
@@ -135,44 +121,6 @@
                                                                            ],
                                                                   "path":  [
                                                                                "cart",
-                                                                               "health"
-                                                                           ]
-                                                              }
-                                                  }
-                                  },
-                                  {
-                                      "name":  "Order Service Health",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{baseUrl}}/order/health",
-                                                                  "host":  [
-                                                                               "{{baseUrl}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "order",
-                                                                               "health"
-                                                                           ]
-                                                              }
-                                                  }
-                                  },
-                                  {
-                                      "name":  "Payment Service Health",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "header":  [
-
-                                                                 ],
-                                                      "url":  {
-                                                                  "raw":  "{{baseUrl}}/payment/health",
-                                                                  "host":  [
-                                                                               "{{baseUrl}}"
-                                                                           ],
-                                                                  "path":  [
-                                                                               "payment",
                                                                                "health"
                                                                            ]
                                                               }
@@ -196,6 +144,44 @@
                                                                            ]
                                                               }
                                                   }
+                                  },
+                                  {
+                                      "name":  "Order WeatherForecast (Template)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/order/weatherforecast",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "order",
+                                                                               "weatherforecast"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Payment WeatherForecast (Template)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/payment/weatherforecast",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "payment",
+                                                                               "weatherforecast"
+                                                                           ]
+                                                              }
+                                                  }
                                   }
                               ]
                  },
@@ -204,23 +190,6 @@
                      "item":  [
                                   {
                                       "name":  "User Login",
-                                      "event":  [
-                                                    {
-                                                        "listen":  "test",
-                                                        "script":  {
-                                                                       "exec":  [
-                                                                                    "var jsonData = pm.response.json();",
-                                                                                    "if (jsonData \u0026\u0026 jsonData.token) {",
-                                                                                    "    pm.collectionVariables.set(\u0027bearerToken\u0027, jsonData.token);",
-                                                                                    "    console.log(\u0027Saved token to bearerToken variable\u0027);",
-                                                                                    "} else if (jsonData \u0026\u0026 jsonData.data \u0026\u0026 jsonData.data.token) {",
-                                                                                    "    pm.collectionVariables.set(\u0027bearerToken\u0027, jsonData.data.token);",
-                                                                                    "}"
-                                                                                ],
-                                                                       "type":  "text/javascript"
-                                                                   }
-                                                    }
-                                                ],
                                       "request":  {
                                                       "method":  "POST",
                                                       "header":  [
@@ -252,7 +221,27 @@
                                                                                "login"
                                                                            ]
                                                               }
-                                                  }
+                                                  },
+                                      "event":  {
+                                                    "listen":  "test",
+                                                    "script":  {
+                                                                   "exec":  [
+                                                                                "var jsonData = pm.response.json();",
+                                                                                "var data = jsonData \u0026\u0026 jsonData.data ? jsonData.data : jsonData;",
+                                                                                "var accessToken = data \u0026\u0026 (data.accessToken || data.token);",
+                                                                                "var refreshToken = data \u0026\u0026 data.refreshToken;",
+                                                                                "if (accessToken) {",
+                                                                                "    pm.collectionVariables.set(\u0027bearerToken\u0027, accessToken);",
+                                                                                "    console.log(\u0027Saved access token to bearerToken variable\u0027);",
+                                                                                "}",
+                                                                                "if (refreshToken) {",
+                                                                                "    pm.collectionVariables.set(\u0027refreshToken\u0027, refreshToken);",
+                                                                                "    console.log(\u0027Saved refreshToken variable\u0027);",
+                                                                                "}"
+                                                                            ],
+                                                                   "type":  "text/javascript"
+                                                               }
+                                                }
                                   },
                                   {
                                       "name":  "User Login (Direct Path)",
@@ -339,7 +328,27 @@
                                                                                "login"
                                                                            ]
                                                               }
-                                                  }
+                                                  },
+                                      "event":  {
+                                                    "listen":  "test",
+                                                    "script":  {
+                                                                   "exec":  [
+                                                                                "var jsonData = pm.response.json();",
+                                                                                "var data = jsonData \u0026\u0026 jsonData.data ? jsonData.data : jsonData;",
+                                                                                "var accessToken = data \u0026\u0026 (data.accessToken || data.token);",
+                                                                                "var refreshToken = data \u0026\u0026 data.refreshToken;",
+                                                                                "if (accessToken) {",
+                                                                                "    pm.collectionVariables.set(\u0027bearerToken\u0027, accessToken);",
+                                                                                "    console.log(\u0027Saved access token to bearerToken variable\u0027);",
+                                                                                "}",
+                                                                                "if (refreshToken) {",
+                                                                                "    pm.collectionVariables.set(\u0027refreshToken\u0027, refreshToken);",
+                                                                                "    console.log(\u0027Saved refreshToken variable\u0027);",
+                                                                                "}"
+                                                                            ],
+                                                                   "type":  "text/javascript"
+                                                               }
+                                                }
                                   },
                                   {
                                       "name":  "Admin Refresh Token",
@@ -354,7 +363,7 @@
                                                                  ],
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"refreshToken\": \"YOUR_REFRESH_TOKEN\"\n}"
+                                                                   "raw":  "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
                                                                },
                                                       "url":  {
                                                                   "raw":  "{{baseUrl}}/api/v1/identity/admin/refresh",
@@ -444,7 +453,7 @@
                                                                  ],
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"email\": \"customer@flower.local\",\n  \"resetToken\": \"PASTE_RESET_TOKEN_HERE\",\n  \"newPassword\": \"CustomerFL@123!\"\n}"
+                                                                   "raw":  "{\n  \"resetToken\": \"PASTE_RESET_TOKEN_HERE\",\n  \"newPassword\": \"CustomerFL@123!\",\n  \"confirmPassword\": \"CustomerFL@123!\"\n}"
                                                                },
                                                       "url":  {
                                                                   "raw":  "{{baseUrl}}/api/v1/identity/auth/reset-password",
@@ -459,6 +468,254 @@
                                                                                "reset-password"
                                                                            ]
                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "User Refresh Token",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/identity/auth/refresh",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "identity",
+                                                                               "auth",
+                                                                               "refresh"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "User Refresh Token (Direct Path)",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/auth/refresh",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "refresh"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Admin Session",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/identity/admin/session",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "identity",
+                                                                               "admin",
+                                                                               "session"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Admin Session (Direct Path)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/admin/session",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "admin",
+                                                                               "session"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Notifications (Team 1)",
+                     "item":  [
+                                  {
+                                      "name":  "List My Notifications",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/identity/notifications?page=1\u0026pageSize=20",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "identity",
+                                                                               "notifications"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "page",
+                                                                                    "value":  "1"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "pageSize",
+                                                                                    "value":  "20"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "List My Unread Notifications",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/identity/notifications?page=1\u0026pageSize=20\u0026isRead=false",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "identity",
+                                                                               "notifications"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "page",
+                                                                                    "value":  "1"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "pageSize",
+                                                                                    "value":  "20"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "isRead",
+                                                                                    "value":  "false",
+                                                                                    "description":  "Filters by IsRead boolean for the Flutter notification UI."
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "List My Notifications (Direct Path)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/notifications?page=1\u0026pageSize=20",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "notifications"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "page",
+                                                                                    "value":  "1"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "pageSize",
+                                                                                    "value":  "20"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
                                                   }
                                   }
                               ]
@@ -666,45 +923,6 @@
                                                               }
                                                   }
                                   },
-                                   {
-                                       "name":  "Get Areas with Cities (/address/api/areas)",
-                                       "request":  {
-                                                       "method":  "GET",
-                                                       "header":  [
-
-                                                                  ],
-                                                       "url":  {
-                                                                   "raw":  "{{baseUrl}}/address/api/areas",
-                                                                   "host":  [
-                                                                                "{{baseUrl}}"
-                                                                            ],
-                                                                   "path":  [
-                                                                                "address",
-                                                                                "api",
-                                                                                "areas"
-                                                                            ]
-                                                               }
-                                                   }
-                                   },
-                                   {
-                                       "name":  "Get Areas with Cities (/api/areas)",
-                                       "request":  {
-                                                       "method":  "GET",
-                                                       "header":  [
-
-                                                                  ],
-                                                       "url":  {
-                                                                   "raw":  "{{baseUrl}}/api/areas",
-                                                                   "host":  [
-                                                                                "{{baseUrl}}"
-                                                                            ],
-                                                                   "path":  [
-                                                                                "api",
-                                                                                "areas"
-                                                                            ]
-                                                               }
-                                                   }
-                                   },
                                   {
                                       "name":  "Resolve Store Coverage",
                                       "request":  {
@@ -1015,6 +1233,386 @@
                                                                    "type":  "bearer"
                                                                }
                                                   }
+                                  },
+                                  {
+                                      "name":  "Get Areas With Cities",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/areas",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "areas"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get Areas With Cities (Direct /areas)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/areas",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "areas"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get Areas With Cities (Direct /api/areas)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/areas",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "areas"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get Areas With Cities (Address Alias)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/address/api/areas",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "address",
+                                                                               "api",
+                                                                               "areas"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "List My Saved Addresses (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/users/me/addresses",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users",
+                                                                               "me",
+                                                                               "addresses"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get My Address Details (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/users/me/addresses/{{addressId}}",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users",
+                                                                               "me",
+                                                                               "addresses",
+                                                                               "{{addressId}}"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Create User Address (Direct Route)",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/users/me/addresses",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users",
+                                                                               "me",
+                                                                               "addresses"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"recipientName\": \"Mariam Ahmed\",\n  \"phone\": \"01001112222\",\n  \"addressLine\": \"12 Abbas El Akkad Street, building 4\",\n  \"city\": \"Cairo\",\n  \"area\": \"Nasr City\",\n  \"lat\": 30.0561,\n  \"lng\": 31.33,\n  \"label\": \"Home\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update User Address (Direct Route)",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/users/me/addresses/{{addressId}}",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users",
+                                                                               "me",
+                                                                               "addresses",
+                                                                               "{{addressId}}"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"recipientName\": \"Mariam Ahmed\",\n  \"phone\": \"01001112222\",\n  \"addressLine\": \"9 Road 9, near Metro Station\",\n  \"city\": \"Cairo\",\n  \"area\": \"Maadi\",\n  \"lat\": 29.9602,\n  \"lng\": 31.2569,\n  \"label\": \"Work\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete User Address (Direct Route)",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/users/me/addresses/{{addressId}}",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users",
+                                                                               "me",
+                                                                               "addresses",
+                                                                               "{{addressId}}"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Set Default User Address (Direct Route)",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/users/me/addresses/{{addressId}}/default",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "users",
+                                                                               "me",
+                                                                               "addresses",
+                                                                               "{{addressId}}",
+                                                                               "default"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Resolve Store Coverage (Direct Route)",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/stores/resolve",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "stores",
+                                                                               "resolve"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"city\": \"Cairo\",\n  \"area\": \"Nasr City\",\n  \"lat\": 30.0561,\n  \"lng\": 31.33\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Admin List Stores (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/admin/stores?includeInactive=false",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "admin",
+                                                                               "stores"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "includeInactive",
+                                                                                    "value":  "false"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Admin Get Store Detail (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/admin/stores/{{storeId}}",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "admin",
+                                                                               "stores",
+                                                                               "{{storeId}}"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
                                   }
                               ]
                  },
@@ -1026,15 +1624,68 @@
                                       "request":  {
                                                       "method":  "POST",
                                                       "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json",
-                                                                         "type":  "text"
-                                                                     }
+
                                                                  ],
                                                       "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"fullName\": \"Driver Name\",\n  \"email\": \"driver@example.com\",\n  \"phone\": \"+201011111111\",\n  \"nationalId\": \"29901011234567\",\n  \"vehicleType\": \"Motorcycle\",\n  \"vehiclePlateNumber\": \"ABC-123\"\n}"
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "fullName",
+                                                                                        "value":  "Driver Name",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "phone",
+                                                                                        "value":  "+201011111111",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "email",
+                                                                                        "value":  "driver@example.com",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "nationalId",
+                                                                                        "value":  "29901011234567",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "vehicleType",
+                                                                                        "value":  "Motorcycle",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "vehiclePlateNumber",
+                                                                                        "value":  "ABC-123",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "password",
+                                                                                        "value":  "Driver_123!",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "confirmPassword",
+                                                                                        "value":  "Driver_123!",
+                                                                                        "type":  "text"
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "documents",
+                                                                                        "type":  "file",
+                                                                                        "src":  [
+
+                                                                                                ]
+                                                                                    },
+                                                                                    {
+                                                                                        "key":  "documents",
+                                                                                        "type":  "file",
+                                                                                        "src":  [
+
+                                                                                                ],
+                                                                                        "disabled":  true,
+                                                                                        "description":  "Optional additional document. Enable and choose another file when testing multiple uploads."
+                                                                                    }
+                                                                                ]
                                                                },
                                                       "url":  {
                                                                   "raw":  "{{baseUrl}}/api/v1/identity/drivers/applications",
@@ -1188,7 +1839,7 @@
                                                                  ],
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"reason\": \"Incomplete documentation\"\n}"
+                                                                   "raw":  "{\n  \"rejectionReason\": \"Incomplete documentation\"\n}"
                                                                },
                                                       "url":  {
                                                                   "raw":  "{{baseUrl}}/api/v1/identity/admin/drivers/applications/:id/reject",
@@ -1212,6 +1863,43 @@
                                                                                    }
                                                                                ]
                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Admin Download Driver Document",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/identity/admin/drivers/applications/{{driverApplicationId}}/documents/{{driverDocumentId}}/download",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "identity",
+                                                                               "admin",
+                                                                               "drivers",
+                                                                               "applications",
+                                                                               "{{driverApplicationId}}",
+                                                                               "documents",
+                                                                               "{{driverDocumentId}}",
+                                                                               "download"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
                                                   }
                                   }
                               ]
@@ -1271,7 +1959,7 @@
 
                                                                  ],
                                                       "url":  {
-                                                                  "raw":  "{{baseUrl}}/api/v1/catalog/categories",
+                                                                  "raw":  "{{baseUrl}}/api/v1/catalog/categories?sortBy=LowestPrice",
                                                                   "host":  [
                                                                                "{{baseUrl}}"
                                                                            ],
@@ -1280,7 +1968,14 @@
                                                                                "v1",
                                                                                "catalog",
                                                                                "categories"
-                                                                           ]
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "sortBy",
+                                                                                    "value":  "LowestPrice",
+                                                                                    "description":  "Allowed: LowestPrice, HighestPrice, New, Old, Discount. Also accepts PriceAsc, PriceDesc, Newest, Oldest, PriceLowToHigh, PriceHighToLow, DiscountHighToLow."
+                                                                                }
+                                                                            ]
                                                               }
                                                   }
                                   },
@@ -1515,6 +2210,330 @@
 
                                                                  ]
                                                   }
+                                  },
+                                  {
+                                      "name":  "Admin List Categories",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/catalog/admin/categories?includeArchived=true",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "catalog",
+                                                                               "admin",
+                                                                               "categories"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "includeArchived",
+                                                                                    "value":  "true"
+                                                                                }
+                                                                            ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Admin Create Category",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/catalog/admin/categories",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "catalog",
+                                                                               "admin",
+                                                                               "categories"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"name\": \"Tulips\",\n  \"imageUrl\": \"/images/categories/tulips.jpg\",\n  \"sortOrder\": 10,\n  \"isActive\": true\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Admin Update Category",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/catalog/admin/categories/{{categoryId}}",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "catalog",
+                                                                               "admin",
+                                                                               "categories",
+                                                                               "{{categoryId}}"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"name\": \"Tulips Updated\",\n  \"imageUrl\": \"/images/categories/tulips.jpg\",\n  \"sortOrder\": 10\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Admin Archive Category",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/catalog/admin/categories/{{categoryId}}/archive",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "catalog",
+                                                                               "admin",
+                                                                               "categories",
+                                                                               "{{categoryId}}",
+                                                                               "archive"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Admin Restore Category",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/catalog/admin/categories/{{categoryId}}/restore",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "catalog",
+                                                                               "admin",
+                                                                               "categories",
+                                                                               "{{categoryId}}",
+                                                                               "restore"
+                                                                           ]
+                                                              },
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get All Categories (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/categories?sortBy=LowestPrice",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "categories"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "sortBy",
+                                                                                    "value":  "LowestPrice",
+                                                                                    "description":  "Allowed: LowestPrice, HighestPrice, New, Old, Discount. Also accepts PriceAsc, PriceDesc, Newest, Oldest, PriceLowToHigh, PriceHighToLow, DiscountHighToLow."
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get Category by ID (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/categories/{{categoryId}}",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "categories",
+                                                                               "{{categoryId}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get All Occasions (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/occasions",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "occasions"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get All Products (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/products",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "products"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get Product Details (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/products/{{productId}}",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "products",
+                                                                               "{{productId}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get Home Layout (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/home/layout",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "home",
+                                                                               "layout"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get Home Sections (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/home/sections",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "home",
+                                                                               "sections"
+                                                                           ]
+                                                              }
+                                                  }
                                   }
                               ]
                  },
@@ -1593,7 +2612,7 @@
                                                               },
                                                       "method":  "POST",
                                                       "body":  {
-                                                                   "raw":  "{\\n  \"productId\": \"{{productId}}\",\\n  \"quantity\": 2,\\n  \"storeId\": \"{{storeId}}\"\\n}",
+                                                                   "raw":  "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2,\n  \"storeId\": \"{{storeId}}\"\n}",
                                                                    "mode":  "raw"
                                                                },
                                                       "header":  [
@@ -1654,7 +2673,7 @@
                                                               },
                                                       "method":  "PUT",
                                                       "body":  {
-                                                                   "raw":  "{\\n  \"quantity\": 4,\\n  \"storeId\": \"{{storeId}}\"\\n}",
+                                                                   "raw":  "{\n  \"quantity\": 4,\n  \"storeId\": \"{{storeId}}\"\n}",
                                                                    "mode":  "raw"
                                                                },
                                                       "header":  [
@@ -1782,6 +2801,218 @@
                                                                               ],
                                                                    "type":  "bearer"
                                                                }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Orders \u0026 Fulfillment (Team 1)",
+                     "item":  [
+                                  {
+                                      "name":  "1. List My Orders",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept-Language",
+                                                                         "value":  "{{acceptLanguage}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/orders?page=1\u0026pageSize=20",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "orders"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "page",
+                                                                                    "value":  "1"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "pageSize",
+                                                                                    "value":  "20"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status is 200 OK\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var jsonData = pm.response.json();",
+                                                                                    "if (jsonData \u0026\u0026 jsonData.data \u0026\u0026 jsonData.data.items \u0026\u0026 jsonData.data.items.length \u003e 0) {",
+                                                                                    "    pm.collectionVariables.set(\u0027orderId\u0027, jsonData.data.items[0].id);",
+                                                                                    "    console.log(\u0027Saved orderId: \u0027 + jsonData.data.items[0].id);",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "2. Get Order Details",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept-Language",
+                                                                         "value":  "{{acceptLanguage}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/api/v1/orders/{{orderId}}",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "orders",
+                                                                               "{{orderId}}"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status is 200 OK\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var jsonData = pm.response.json();",
+                                                                                    "pm.test(\u0027Response has order detail data\u0027, function () { pm.expect(jsonData.data).to.be.an(\u0027object\u0027); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "3. List My Orders (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept-Language",
+                                                                         "value":  "{{acceptLanguage}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/orders?page=1\u0026pageSize=20",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "orders"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "page",
+                                                                                    "value":  "1"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "pageSize",
+                                                                                    "value":  "20"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "4. Get Order Details (Direct Route)",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept-Language",
+                                                                         "value":  "{{acceptLanguage}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "auth":  {
+                                                                   "type":  "bearer",
+                                                                   "bearer":  [
+                                                                                  {
+                                                                                      "key":  "token",
+                                                                                      "value":  "{{bearerToken}}",
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                              ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/orders/{{orderId}}",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "orders",
+                                                                               "{{orderId}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Payment Service (Team 1)",
+                     "item":  [
+                                  {
+                                      "name":  "Payment WeatherForecast",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{baseUrl}}/payment/weatherforecast",
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "payment",
+                                                                               "weatherforecast"
+                                                                           ]
+                                                              }
                                                   }
                                   }
                               ]
